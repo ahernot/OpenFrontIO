@@ -967,8 +967,14 @@ export class ClientGameRunner {
     });
   }
 
-  private doBoatAttackUnderCursor(): void {
-    const tile = this.getTileUnderCursor();
+  private doBoatAttackUnderCursor(event: DoBoatAttackEvent): void {
+    if (!this.isActive || this.renderer.uiState.ghostStructure !== null) {
+      return;
+    }
+    const tile =
+      event.x !== undefined && event.y !== undefined
+        ? this.getTileFromScreen(event.x, event.y)
+        : this.getTileUnderCursor();
     if (tile === null) {
       return;
     }
@@ -1111,12 +1117,19 @@ export class ClientGameRunner {
     if (!this.isActive || !this.lastMousePosition) {
       return null;
     }
-    if (this.gameView.inSpawnPhase()) {
+    return this.getTileFromScreen(
+      this.lastMousePosition.x,
+      this.lastMousePosition.y,
+    );
+  }
+
+  private getTileFromScreen(screenX: number, screenY: number): TileRef | null {
+    if (!this.isActive || this.gameView.inSpawnPhase()) {
       return null;
     }
     const cell = this.renderer.transformHandler.screenToWorldCoordinates(
-      this.lastMousePosition.x,
-      this.lastMousePosition.y,
+      screenX,
+      screenY,
     );
     if (!this.gameView.isValidCoord(cell.x, cell.y)) {
       return null;

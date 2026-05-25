@@ -145,7 +145,12 @@ export class ShowEmojiMenuEvent implements GameEvent {
   ) {}
 }
 
-export class DoBoatAttackEvent implements GameEvent {}
+export class DoBoatAttackEvent implements GameEvent {
+  constructor(
+    public readonly x?: number,
+    public readonly y?: number,
+  ) {}
+}
 
 export class DoGroundAttackEvent implements GameEvent {}
 
@@ -260,6 +265,7 @@ export class InputHandler {
     this.canvas.addEventListener("pointerdown", (e) => this.onPointerDown(e));
     window.addEventListener("pointerup", (e) => this.onPointerUp(e));
     window.addEventListener("pointercancel", (e) => this.onPointerUp(e));
+    this.canvas.addEventListener("dblclick", (e) => this.onDoubleClick(e));
     this.canvas.addEventListener(
       "wheel",
       (e) => {
@@ -842,6 +848,16 @@ export class InputHandler {
       return;
     }
     this.eventBus.emit(new ContextMenuEvent(event.clientX, event.clientY));
+  }
+
+  private onDoubleClick(event: MouseEvent) {
+    if (event.button !== 0) {
+      return;
+    }
+    if (this.gameView.inSpawnPhase()) {
+      return;
+    }
+    this.eventBus.emit(new DoBoatAttackEvent(event.clientX, event.clientY));
   }
 
   private setGhostStructure(ghostStructure: PlayerBuildableUnitType | null) {
