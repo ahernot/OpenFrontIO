@@ -33,9 +33,9 @@ import {
 } from "../Transport";
 import { UIState } from "../UIState";
 
-/** True for nuke types (AtomBomb, HydrogenBomb): ghost is preserved after placement so user can place multiple or keep selection (Enter/key confirm). */
-export function shouldPreserveGhostAfterBuild(unitType: UnitType): boolean {
-  return unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb;
+/** Keep the selected build tool active after placement so users can chain builds. */
+export function shouldPreserveGhostAfterBuild(_unitType: UnitType): boolean {
+  return true;
 }
 
 export class BuildPreviewController implements Controller {
@@ -379,17 +379,19 @@ export class BuildPreviewController implements Controller {
       this.removeGhostStructure();
       return;
     }
+    const unitType = this.ghostUnit.buildableUnit.type;
     const tile = this.transformHandler.screenToWorldCoordinates(e.x, e.y);
     if (this.ghostUnit.buildableUnit.canUpgrade !== false) {
       this.eventBus.emit(
         new SendUpgradeStructureIntentEvent(
           this.ghostUnit.buildableUnit.canUpgrade,
-          this.ghostUnit.buildableUnit.type,
+          unitType,
         ),
       );
-      this.removeGhostStructure();
+      if (!shouldPreserveGhostAfterBuild(unitType)) {
+        this.removeGhostStructure();
+      }
     } else if (this.ghostUnit.buildableUnit.canBuild) {
-      const unitType = this.ghostUnit.buildableUnit.type;
       const rocketDirectionUp =
         unitType === UnitType.AtomBomb || unitType === UnitType.HydrogenBomb
           ? this.uiState.rocketDirectionUp
